@@ -1,15 +1,17 @@
 import { getCustomRepository } from "typeorm";
-import { UsersRepositories } from "../repositories/UserRepositories"
+import { UsersRepositories } from "../repositories/UserRepositories";
+import { hash } from "bcryptjs";
 
 interface IUserRequest {
     name: string;
     email: string;
     admin?: boolean;
+    password: string;
 }
 
 class CreateUserService {
 
-    async execute({ name, email, admin } : IUserRequest) {
+    async execute({ name, email, admin = false, password } : IUserRequest) {
         const usersRepository = getCustomRepository(UsersRepositories);
 
          // verifica se e-mail tá preenchido
@@ -27,11 +29,15 @@ class CreateUserService {
             throw new Error("usuário já existe");
         }
 
+        // criptografou a senha
+        const passwordHash = await hash(password, 8); 
+
         // cria novo usuário
         const user = usersRepository.create({
             name,
             email,
-            admin
+            admin,
+            password: passwordHash,
         })
 
         // salva novo usuário
